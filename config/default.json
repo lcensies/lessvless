@@ -1,0 +1,102 @@
+{
+  "dns": {
+    "final": "cloudflare-doh",
+    "servers": [
+      {
+        "address": "local",
+        "tag": "system"
+      },
+      {
+        "address": "https://1.1.1.1/dns-query",
+        "tag": "cloudflare-doh"
+      }
+    ]
+  },
+  "inbounds": [
+    {
+      "address": [
+        "172.16.0.1/30"
+      ],
+      "auto_route": true,
+      "interface_name": "tun10",
+      "mtu": 1500,
+      "sniff": true,
+      "strict_route": true,
+      "tag": "tun-in",
+      "type": "tun"
+    },
+    {
+      "listen": "127.0.0.1",
+      "listen_port": 7890,
+      "sniff": true,
+      "tag": "mixed-in",
+      "type": "mixed"
+    }
+  ],
+  "log": {
+    "level": "info"
+  },
+  "outbounds": [
+    {
+      "tag": "direct-out",
+      "type": "direct"
+    },
+    {
+      "tag": "dns-out",
+      "type": "dns"
+    },
+    {
+      "packet_encoding": "xudp",
+      "server": "default_host",
+      "server_port": 8081,
+      "tag": "wh3tduwc",
+      "tls": {
+        "enabled": true,
+        "reality": {
+          "enabled": true,
+          "public_key": "default_public_key",
+          "short_id": "default_short_id"
+        },
+        "server_name": "rutube.ru",
+        "utls": {
+          "enabled": true,
+          "fingerprint": "chrome"
+        }
+      },
+      "type": "vless",
+      "uuid": "default_uuid"
+    }
+  ],
+  "route": {
+    "auto_detect_interface": true,
+    "default_domain_resolver": "cloudflare-doh",
+    "final": "wh3tduwc",
+    "rules": [
+      {
+        "outbound": "dns-out",
+        "protocol": "dns"
+      },
+      {
+        "ip_cidr": [
+          "10.0.0.0/8",
+          "172.16.0.0/12",
+          "192.168.0.0/16",
+          "100.64.0.0/10",
+          "127.0.0.0/8",
+          "::1/128",
+          "fc00::/7",
+          "fe80::/10"
+        ],
+        "outbound": "direct-out"
+      },
+      {
+        "domain_suffix": [
+          "lan",
+          "local",
+          "home"
+        ],
+        "outbound": "direct-out"
+      }
+    ]
+  }
+}
