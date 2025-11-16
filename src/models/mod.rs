@@ -102,6 +102,7 @@ pub struct VlessOutbound {
     #[derivative(Default(value="String::from(\"vless\")"))]
     type_field: String,
     tag: String,
+    uuid: String
 }
 
 #[derive(Serialize, Debug, Clone)]
@@ -137,6 +138,9 @@ impl Outbound {
                 Ok(Outbound::Dns(dns_outbound))
             }
             "vless" => {
+                let uuid = map.get("uuid")
+                    .unwrap_or(&serde_json::Value::String("default_uuid".to_string()))
+                    .as_str().unwrap_or("default_encoding").to_string();
                 let packet_encoding = map.get("packet_encoding")
                     .unwrap_or(&serde_json::Value::String("default_encoding".to_string()))
                     .as_str().unwrap_or("default_encoding").to_string();
@@ -159,7 +163,8 @@ impl Outbound {
                     server,
                     server_port,
                     type_field: "vless".to_string(), 
-                    tls: tls
+                    tls: tls,
+                    uuid: uuid
                 };
                 Ok(Outbound::Vless(vless_outbound))
             }
@@ -303,7 +308,10 @@ impl SingBoxConfig {
                 vless.enrich(params);
                 self.update_vless_outbound(vless); 
             } 
-            _ => todo!()
+            _ => {
+                println!("Unknown protocol: {:?}", protocol);
+                todo!()
+            }
         };
          
         Ok(self.clone())

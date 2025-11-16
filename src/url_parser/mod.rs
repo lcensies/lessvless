@@ -48,11 +48,11 @@ pub fn parse_url_params(params: String) -> Result<Map<String, Value>, Box<dyn Er
 
 pub fn parse_url(url: &String) -> Result<Map<String, Value>, Box<dyn Error>> {
     let mut dict = Map::new();
-    let url_regex = Regex::new(r"([a-z+]+)://([a-z0-9]+(?:\.[a-z0-9]+)*):(\d+)(?:\?(.*))?")
+    let url_regex = Regex::new(r"([a-z+]+)://([a-z0-9\-]+)@([a-z0-9]+(?:\.[a-z0-9]+)*):(\d+)(?:\?(.*))?")
     .expect("Invalid regex pattern");
     let captures = url_regex.captures(url).expect("Failed to parse URL");
     
-    if captures.len() != 5 {
+    if captures.len() != 6 {
         return Err(ParseError::new(format!("Wrong number of captures, expected 5: {:?}", captures).as_str()).into());
     }
 
@@ -60,15 +60,19 @@ pub fn parse_url(url: &String) -> Result<Map<String, Value>, Box<dyn Error>> {
         .map(|m| m.as_str())
         .ok_or(ParseError::new("Failed to parse protocol"))?
         .to_string();
-    let host : String = captures.get(2)
+    let uuid: String = captures.get(2)
+        .map(|m| m.as_str())
+        .ok_or(ParseError::new("Failed to parse uuid"))?
+        .to_string();
+    let host : String = captures.get(3)
         .map(|m| m.as_str())
         .ok_or(ParseError::new("Failed to parse host"))?
         .to_string();
-    let port : String = captures.get(3)
+    let port : String = captures.get(4)
         .map(|m| m.as_str())
         .ok_or(ParseError::new("Failed to parse host"))?
         .to_string();
-    let params: String = captures.get(4)
+    let params: String = captures.get(5)
         .map(|m| m.as_str())
         .ok_or(ParseError::new("Failed to parse URL params"))?
         .to_string();
