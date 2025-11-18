@@ -70,7 +70,8 @@ pub struct DnsOutbound {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct RealityConfig {
     enabled: bool,
-    public_key: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    public_key: Option<String>,
     short_id: String,
 }
 
@@ -231,11 +232,11 @@ impl VlessOutbound {
                 Value::String(s) if s == "reality" => {
                     let reality = RealityConfig {
                         enabled: true,
-                        public_key: params
+                        public_key: Some(params
                             .get("pbk")
                             .and_then(|v| v.as_str())
                             .map(|s| s.to_string())
-                            .unwrap_or_default(),
+                            .unwrap_or_default()),
                         short_id: params
                             .get("sid")
                             .and_then(|v| v.as_str())

@@ -32,7 +32,7 @@ fn main() -> std::io::Result<()> {
         new_config.enrich_from_dns(dns).unwrap();
     }
 
-    let mut json_data = serde_json::to_string(&new_config)?;  
+    let mut json_data = serde_json::to_string_pretty(&new_config)?;  
     json_data = json_data.replace("\\\"", "");
     
     if let Some(output) = args.output {
