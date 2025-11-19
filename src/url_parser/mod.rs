@@ -79,6 +79,7 @@ pub fn parse_url(url: &String) -> Result<Map<String, Value>, Box<dyn Error>> {
 
     
     dict.insert("protocol".to_string(), Value::String(protocol));
+    dict.insert("uuid".to_string(), Value::String(uuid));
     dict.insert("host".to_string(), Value::String(host));
     dict.insert("port".to_string(), Value::Number(serde_json::Number::from_str(port.as_str()).unwrap()));
     dict.insert("params".to_string(), Value::Object(parse_url_params(params.to_string()).unwrap()));

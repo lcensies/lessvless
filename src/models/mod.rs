@@ -31,22 +31,27 @@ pub struct Inbound {
     #[serde(skip_serializing_if = "Option::is_none")]
     address: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    auto_route: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     interface_name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     mtu: Option<i32>,
-    sniff: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    sniff: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    auto_route: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     strict_route: Option<bool>,
     tag: String,
     #[serde(rename = "type")]
     type_field: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    stack: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Log {
     level: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    timestamp: Option<bool>,
 }
 
 #[derive(Serialize, Deserialize, Derivative, Debug, Clone)]
@@ -56,6 +61,17 @@ pub struct DirectOutbound {
     #[serde(rename = "type")]
     #[derivative(Default(value="String::from(\"direct\")"))]
     type_field: String,
+}
+
+#[derive(Serialize, Deserialize, Derivative, Debug, Clone)]
+#[derivative(Default)]
+pub struct SocksOutbound {
+    tag: String,
+    #[serde(rename = "type")]
+    #[derivative(Default(value="String::from(\"socks\")"))]
+    type_field: String,
+    server: String,
+    server_port: i32,
 }
 
 #[derive(Serialize, Deserialize, Derivative, Debug, Clone)]
@@ -185,20 +201,32 @@ impl<'de> Deserialize<'de> for Outbound {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct RouteRule {
-    outbound: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    inbound: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    outbound: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    action: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     protocol: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     ip_cidr: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    domain_suffix: Option<Vec<String>>
+    domain_suffix: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    ip_is_private: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    port: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    process_name: Option<Vec<String>>,
 }
 
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Route {
     auto_detect_interface: bool,
-    default_domain_resolver: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    default_domain_resolver: Option<String>,
     #[serde(rename = "final")]
     #[serde(skip_serializing_if = "Option::is_none")]
     final_field: Option<String>,
@@ -218,6 +246,7 @@ impl VlessOutbound {
     fn enrich(&mut self, root_params: Map<String, Value>) {
         self.server = root_params.get("host").unwrap_or_default().to_string();
         self.server_port = root_params.get("port").unwrap_or_default().as_i64().expect("Incorrect port specified") as i32;
+        self.uuid = root_params.get("uuid").unwrap_or_default().to_string();
         let params = root_params.get("params").unwrap_or_default();
 
         let mut tls = TlsConfig {
@@ -226,7 +255,7 @@ impl VlessOutbound {
             server_name: String::new(),
             utls: None,
         };
-
+        
         if let Some(security) = params.get("security") {
             match security {
                 Value::String(s) if s == "reality" => {
